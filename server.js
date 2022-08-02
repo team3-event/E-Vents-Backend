@@ -12,8 +12,6 @@ mongoose.connect(process.env.DATABASE_URL)
 const PORT = process.env.PORT || 3001
 
 const app = express();
-const hotelKey = process.env.HOTEL_TOKEN
-const URL = "https://api.makcorps.com/free/seattle";
 
 app.use(cors());
 

@@ -24,7 +24,26 @@ class Hotels {
   }
 }
 
+class Events {
+  constructor(obj) {
+    this.title = obj.title
+    this.startDate = obj.start.slice(0, 10)
+    this.startTime = obj.start.slice(11, 19)
+    this.endDate = obj.end.slice(0, 10)
+    this.endTime = obj.end.slice(11, 19)
+    this.description = obj.description || obj.entities[0].description
+    this.address = obj.entities[0].formatted_address || obj.entities[1].formatted_address
+  }
+}
+
 app.get('/hotels', async (request, response, next) => {
+
+  //let {eventType, depLocation, arrLocation, fromDate, toDate } = request.query.body;
+  //let eventType = 'academic';
+  //let depLocation = 'seattle';
+  let arrLocation = 'london';
+  //let fromDate = '2022-08-07';
+  //let toDate = '2022-08-14';
 
   let header = {
     "username": "erexie",
@@ -40,7 +59,7 @@ app.get('/hotels', async (request, response, next) => {
 
     let config = {
       headers: { Authorization: `JWT ${tokendata.data.access_token}` },
-      url: 'https://api.makcorps.com/free/london',
+      url: `https://api.makcorps.com/free/${arrLocation}`,
       method: 'get'
     }
     
@@ -62,17 +81,25 @@ let res = await axios(config)
 })
 
 app.get('/flights', async (request, response, next) => {
-  
-  let fromDate = '2022-08-07'
-  //let depLocation = 'seattle'
-  //let arrLocation = 'london'
+
+//let {eventType, depLocation, arrLocation, fromDate, toDate } = request.query.body;
+//let eventType = 'academic';
+let depLocation = 'seattle';
+let arrLocation = 'london';
+let fromDate = '2022-08-07';
+//let toDate = '2022-08-14';
   
   try{
 
-    let depIata = 'SEA';
-    let arrIata = 'LON';
+    let depAirport = await axios.get(`https://api.flightapi.io/iata/${process.env.FLIGHT_API}/${depLocation}/airport`)
+    let arrAirport = await axios.get(`https://api.flightapi.io/iata/${process.env.FLIGHT_API}/${arrLocation}/airport`)
+    console.log(depAirport);
 
-    let info = await axios.get(`https://api.flightapi.io/onewaytrip/62e97e44392496cf5f252528/${depIata}/${arrIata}/${fromDate}/1/0/0/Economy/USD`);
+    let depIata = depAirport.data.data[0].iata;
+    console.log(depIata);
+    let arrIata = arrAirport.data.data[0].iata;
+
+    let info = await axios.get(`https://api.flightapi.io/onewaytrip/${process.env.FLIGHT_API}/${depIata}/${arrIata}/${fromDate}/1/0/0/Economy/USD`);
     console.log(info.data.scores);
     //obj: (object) All of the trip scores, higher is better
     let obj = info.data.scores;
@@ -117,12 +144,13 @@ app.get('/flights', async (request, response, next) => {
 })
 
 app.get('/events', async (request, response, next) => {
-  //let {location, fromDate, toDate, eventType, query } = request.query.body;
+  //let {eventType, depLocation, arrLocation, fromDate, toDate } = request.query.body;
+  let eventType = 'sports';
+  //let depLocation = 'seattle';
   let arrLocation = 'seattle';
   let fromDate = '2022-08-07';
   let toDate = '2022-08-14';
-  let eventType = 'academic';
-  let query = ''
+  //let query = ''
   try {
     let config = {
       headers: { Authorization: `Bearer ${process.env.BEARER_API}` },
@@ -133,13 +161,19 @@ app.get('/events', async (request, response, next) => {
     console.log(res)
     let id = res.data.results[0].id;
     console.log(id);
+
     let config2 = {
       headers: { Authorization: `Bearer ${process.env.BEARER_API}` },
-      url: `https://api.predicthq.com/v1/events/?place.scope=${id}&active.gte=${fromDate}&active.lte=${toDate}&category=${eventType}&sort=rank&q=${query}`,
+      url: `https://api.predicthq.com/v1/events/?place.scope=${id}&active.gte=${fromDate}&active.lte=${toDate}&category=${eventType}&sort=rank`,
       method: 'get'
     }
     let res2 = await axios(config2);
-    console.log(res2.data);
+
+    console.log(res2.data.results[0])
+
+    let responseTrimmed = res2.data.results.slice(0,5);
+    let eventData = responseTrimmed.map(event => new Events(event));
+    response.send(eventData);
   } 
   
   catch (e) {

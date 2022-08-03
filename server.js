@@ -17,6 +17,13 @@ app.use(cors());
 
 app.use(express.json());
 
+class Hotels {
+  constructor(obj) {
+    this.name = obj[0].hotelName
+    this.bestPrice = obj[1][0]
+  }
+}
+
 app.get('/hotels', async (request, response, next) => {
 
   let header = {
@@ -36,23 +43,36 @@ app.get('/hotels', async (request, response, next) => {
       url: 'https://api.makcorps.com/free/london',
       method: 'get'
     }
-    let res = await axios(config)
-    console.log(res.data.Comparison[0][1])
+    
+let res = await axios(config)
+    const responseTrimmed = (res.data.Comparison.slice(0, 5));
+  console.log(responseTrimmed[0][1][0])
+    let hotelData = responseTrimmed.map(hotel => new Hotels(hotel))
+
+    response.send(hotelData)
 
   } catch (e) {
     console.log(e)
   }
 
-  Event.find()
-    .then(eventEnsemble => {
-      response.send(eventEnsemble);
-    })
+  // Event.find()
+  //   .then(eventEnsemble => {
+  //     response.send(eventEnsemble);
+  //   })
 })
 
 app.get('/flights', async (request, response, next) => {
   
+  let fromDate = '2022-08-07'
+  //let depLocation = 'seattle'
+  //let arrLocation = 'london'
+  
   try{
-    let info = await axios.get('https://api.flightapi.io/onewaytrip/62e97e44392496cf5f252528/SEA/LON/2022-08-20/1/0/0/Economy/USD');
+
+    let depIata = 'SEA';
+    let arrIata = 'LON';
+
+    let info = await axios.get(`https://api.flightapi.io/onewaytrip/62e97e44392496cf5f252528/${depIata}/${arrIata}/${fromDate}/1/0/0/Economy/USD`);
     console.log(info.data.scores);
     //obj: (object) All of the trip scores, higher is better
     let obj = info.data.scores;
@@ -97,15 +117,29 @@ app.get('/flights', async (request, response, next) => {
 })
 
 app.get('/events', async (request, response, next) => {
+  //let {location, fromDate, toDate, eventType, query } = request.query.body;
+  let arrLocation = 'seattle';
+  let fromDate = '2022-08-07';
+  let toDate = '2022-08-14';
+  let eventType = 'academic';
+  let query = ''
   try {
     let config = {
       headers: { Authorization: `Bearer ${process.env.BEARER_API}` },
-      url: 'https://api.predicthq.com/v1/places/?q=seattle,usa',
+      url: `https://api.predicthq.com/v1/places/?q=${arrLocation}`,
       method: 'get'
     }
     let res = await axios(config)
     console.log(res)
-
+    let id = res.data.results[0].id;
+    console.log(id);
+    let config2 = {
+      headers: { Authorization: `Bearer ${process.env.BEARER_API}` },
+      url: `https://api.predicthq.com/v1/events/?place.scope=${id}&active.gte=${fromDate}&active.lte=${toDate}&category=${eventType}&sort=rank&q=${query}`,
+      method: 'get'
+    }
+    let res2 = await axios(config2);
+    console.log(res2.data);
   } 
   
   catch (e) {

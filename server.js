@@ -17,52 +17,67 @@ app.use(cors());
 
 app.use(express.json());
 
-app.get('/events', async (request, response, next) => {
+app.get('/hotels', async (request, response, next) => {
 
   let header = {
     "username": "erexie",
     "password": "JOOJOOman42!!"
   }
-  
 
-  try { 
-let tokendata = await axios.post('https://api.makcorps.com/auth', header)
-let authToken = {
-  Authorization: `JWT ${tokendata.data.access_token}`
-}
-console.log(authToken)
+  try {
+    let tokendata = await axios.post('https://api.makcorps.com/auth', header)
+    let authToken = {
+      Authorization: `JWT ${tokendata.data.access_token}`
+    }
+    console.log(authToken)
 
-let config = {
-  headers:{Authorization: `JWT ${tokendata.data.access_token}`},
-  url:'https://api.makcorps.com/free/london',
-  method: 'get'
-}
-let res = await axios(config)
-console.log(res.data.Comparison[0][1])
+    let config = {
+      headers: { Authorization: `JWT ${tokendata.data.access_token}` },
+      url: 'https://api.makcorps.com/free/london',
+      method: 'get'
+    }
+    let res = await axios(config)
+    console.log(res.data.Comparison[0][1])
 
-} catch (e){
-  console.log(e)
-}
-//   let token = tokendata;
-//   console.log(token);
+  } catch (e) {
+    console.log(e)
+  }
 
-// let authToken = {
-//   "Authorization": `${token}`
-// }
-// console.log(authToken);
-// try {
-// let res2 = await axios.get('https://api.makcorps.com/free/london', authToken)
-  
-// } catch (e) {
-//   console.log(e)
-// };
-
-
-Event.find()
-  .then(eventEnsemble => {
-    response.send(eventEnsemble);
-  })
+  Event.find()
+    .then(eventEnsemble => {
+      response.send(eventEnsemble);
+    })
 })
+
+app.get('/flights', async (request, response, next) => {
+  try{
+    let info = await axios.get('https://api.flightapi.io/onewaytrip/62e97e44392496cf5f252528/HEL/OUL/2022-08-20/1/0/0/Economy/USD');
+    console.log(info.data.fares);
+  }
+  catch(e){
+    console.log(e)
+  }
+})
+
+app.get('/events', async (request, response, next) => {
+  try {
+    let config = {
+      headers: { Authorization: `Bearer ${process.env.BEARER_API}` },
+      url: 'https://api.predicthq.com/v1/places/?q=seattle,usa',
+      method: 'get'
+    }
+    let res = await axios(config)
+    console.log(res)
+
+  } 
+  
+  catch (e) {
+    console.log(e)
+  }
+
+})
+
+
 
 
 app.post('/events', (request, response, next) => {

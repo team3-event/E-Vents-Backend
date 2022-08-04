@@ -6,6 +6,11 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const Event = require('./models/event.js');
 const { default: axios } = require('axios');
+
+
+const jwt = require('jsonwebtoken');
+const jwksClient = require('jwks-rsa');
+
 mongoose.connect(process.env.DATABASE_URL)
 const PORT = process.env.PORT || 3001
 const app = express();
@@ -28,6 +33,42 @@ class Events {
     this.endTime = obj.end.slice(11, 19)
   }
 }
+
+function verifyUser(request, response, next) {
+  try {
+    const token = request.headers.authorization.split(' ')[1];
+    jwt.verify(token, getKey, {}, function(err, user) {
+      request.user = user;
+      next();
+    });
+  } catch(e) {
+    next('not authorized');
+  }
+}
+
+const client = jwksClient({
+  jwksUri: 'https://dev-zlkci082.us.auth0.com/.well-known/jwks.json'
+});
+
+function getKey(header, callback) {
+  client.getSigningKey(header.kid, function (err, key) {
+    const signingKey = key.publicKey || key.rsaPublicKey;
+    callback(null, signingKey);
+  });
+}
+
+app.use(verifyUser);
+app.use((request, response, next) => {
+  console.log(request.user);
+  console.log('Almost made it');
+  next();
+});
+
+
+
+app.get('/login', (request, response) => {
+  response.send('you made it');
+});
 
 app.get('/hotels', async (request, response, next) => {
 

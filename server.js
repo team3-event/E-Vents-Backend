@@ -31,8 +31,8 @@ class Events {
     this.startTime = obj.start.slice(11, 19)
     this.endDate = obj.end.slice(0, 10)
     this.endTime = obj.end.slice(11, 19)
-    this.description = obj.description || obj.entities[0].description
-    this.address = obj.entities[0].formatted_address || obj.entities[1].formatted_address
+    // this.description = obj.description || obj.entities[0].description
+    // this.address = obj.entities[0].formatted_address || obj.entities[1].formatted_address
   }
 }
 
@@ -41,7 +41,7 @@ app.get('/hotels', async (request, response, next) => {
   //let {eventType, depLocation, arrLocation, fromDate, toDate } = request.query.body;
   //let eventType = 'academic';
   //let depLocation = 'seattle';
-  let arrLocation = 'london';
+  let arrLocation = request.query.city;
   //let fromDate = '2022-08-07';
   //let toDate = '2022-08-14';
 
@@ -55,19 +55,17 @@ app.get('/hotels', async (request, response, next) => {
     let authToken = {
       Authorization: `JWT ${tokendata.data.access_token}`
     }
-    console.log(authToken)
 
     let config = {
       headers: { Authorization: `JWT ${tokendata.data.access_token}` },
       url: `https://api.makcorps.com/free/${arrLocation}`,
       method: 'get'
     }
-    
+    await axios(config)
 let res = await axios(config)
     const responseTrimmed = (res.data.Comparison.slice(0, 5));
-  console.log(responseTrimmed[0][1][0])
     let hotelData = responseTrimmed.map(hotel => new Hotels(hotel))
-
+    
     response.send(hotelData)
 
   } catch (e) {
@@ -81,26 +79,26 @@ let res = await axios(config)
 })
 
 app.get('/flights', async (request, response, next) => {
-
-//let {eventType, depLocation, arrLocation, fromDate, toDate } = request.query.body;
+console.log(request.query)
+let {eventType, depLocation, arrLocation, fromDate, toDate } = request.query;
 //let eventType = 'academic';
-let depLocation = 'seattle';
-let arrLocation = 'london';
-let fromDate = '2022-08-07';
+// let depLocation = 'seattle';
+// let arrLocation = 'london';
+// let fromDate = '2022-08-07';
 //let toDate = '2022-08-14';
   
   try{
 
     let depAirport = await axios.get(`https://api.flightapi.io/iata/${process.env.FLIGHT_API}/${depLocation}/airport`)
     let arrAirport = await axios.get(`https://api.flightapi.io/iata/${process.env.FLIGHT_API}/${arrLocation}/airport`)
-    console.log(depAirport);
+    // console.log(depAirport);
 
     let depIata = depAirport.data.data[0].iata;
-    console.log(depIata);
+    // console.log(depIata);
     let arrIata = arrAirport.data.data[0].iata;
 
     let info = await axios.get(`https://api.flightapi.io/onewaytrip/${process.env.FLIGHT_API}/${depIata}/${arrIata}/${fromDate}/1/0/0/Economy/USD`);
-    console.log(info.data.scores);
+    // console.log(info.data.scores);
     //obj: (object) All of the trip scores, higher is better
     let obj = info.data.scores;
     // optimalFlightString: (string) id for the best flight
@@ -115,16 +113,16 @@ let fromDate = '2022-08-07';
         return 0;
       }
     })[0][0];
-    console.log(optimalFlightString);
+    // console.log(optimalFlightString);
     // topFlightArray: (array) All of the different prices for the same flight path - the websites have different prices
     let topFlightArray = info.data.fares.filter(e => e.tripId === optimalFlightString);
-    console.log(topFlightArray);
+    // console.log(topFlightArray);
     //legId: (string) Used to connect price to flight info
     let legId = info.data.trips.find(e => e.id === optimalFlightString).legIds[0];
-    console.log(legId);
+    // console.log(legId);
     //flightObj: (obj) Contains information about departure, arrival, airports, etc.
     let flightObj = info.data.legs.find(e => e.id === legId);
-    console.log(flightObj);
+    // console.log(flightObj);
 
     //To be sent back to the front end
     let reObject = {
@@ -136,7 +134,6 @@ let fromDate = '2022-08-07';
     }
     //Sending to the client
     response.send(reObject);
-    console.log(reObject);
   }
   catch(e){
     console.log(e)
@@ -144,12 +141,12 @@ let fromDate = '2022-08-07';
 })
 
 app.get('/events', async (request, response, next) => {
-  //let {eventType, depLocation, arrLocation, fromDate, toDate } = request.query.body;
-  let eventType = 'sports';
+  let {eventType, depLocation, arrLocation, fromDate, toDate } = request.query;
+  // let eventType = 'sports';
   //let depLocation = 'seattle';
-  let arrLocation = 'seattle';
-  let fromDate = '2022-08-07';
-  let toDate = '2022-08-14';
+  // let arrLocation = 'seattle';
+  // let fromDate = '2022-08-07';
+  // let toDate = '2022-08-14';
   //let query = ''
   try {
     let config = {
@@ -158,9 +155,9 @@ app.get('/events', async (request, response, next) => {
       method: 'get'
     }
     let res = await axios(config)
-    console.log(res)
+    // console.log(res)
     let id = res.data.results[0].id;
-    console.log(id);
+    // console.log(id);
 
     let config2 = {
       headers: { Authorization: `Bearer ${process.env.BEARER_API}` },
@@ -169,7 +166,7 @@ app.get('/events', async (request, response, next) => {
     }
     let res2 = await axios(config2);
 
-    console.log(res2.data.results[0])
+    // console.log(res2.data.results[0])
 
     let responseTrimmed = res2.data.results.slice(0,5);
     let eventData = responseTrimmed.map(event => new Events(event));

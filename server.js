@@ -37,7 +37,7 @@ class Events {
 function verifyUser(request, response, next) {
   try {
     const token = request.headers.authorization.split(' ')[1];
-    console.log(token);
+    
     jwt.verify(token, getKey, {}, function(err, user) {
       request.user = user;
       next();
@@ -58,10 +58,10 @@ function getKey(header, callback) {
   });
 }
 
-//app.use(verifyUser);
+
 app.use((request, response, next) => {
-  console.log(request.user);
-  //response.send(request.user)
+  
+ 
   console.log('Almost made it');
   next();
 })
@@ -91,7 +91,7 @@ app.get('/hotels', async (request, response, next) => {
     }
     await axios(config)
     let res = await axios(config)
-    const responseTrimmed = (res.data.Comparison.slice(0, 5));
+    const responseTrimmed = (res.data.Comparison.slice(0, 6));
     let hotelData = responseTrimmed.map(hotel => new Hotels(hotel))
     
     response.send(hotelData)
@@ -113,7 +113,7 @@ let {eventType, depLocation, arrLocation, fromDate, toDate } = request.query;
 
     let depAirport = await axios.get(`https://api.flightapi.io/iata/${process.env.FLIGHT_API}/${depLocation}/airport`)
     let arrAirport = await axios.get(`https://api.flightapi.io/iata/${process.env.FLIGHT_API}/${arrLocation}/airport`)
-    // console.log(depAirport);
+    
 
     let depIata = depAirport.data.data[0].iata;
     let arrIata = arrAirport.data.data[0].iata;
@@ -168,7 +168,7 @@ let {eventType, depLocation, arrLocation, fromDate, toDate } = request.query;
 
 app.get('/events', async (request, response, next) => {
   let {eventType, depLocation, arrLocation, fromDate, toDate } = request.query;
-console.log(request.query)
+
   try {
     // Finding the city id of the arrLocation
     let config = {
@@ -190,8 +190,8 @@ console.log(request.query)
     let res2 = await axios(config2);
 
     //Parsing response data
-    let responseTrimmed = res2.data.results.slice(0,5);
-    console.log(responseTrimmed, 'line 190');
+    let responseTrimmed = res2.data.results.slice(0,6);
+    
     //Saving each event as an event object
     let eventData = responseTrimmed.map(event => new Events(event));
 
@@ -200,7 +200,8 @@ console.log(request.query)
   } 
   
   catch (e) {
-    console.log(e)
+    console.log(e);
+    next(e);
   }
 
 })
@@ -258,7 +259,6 @@ app.get('/groupMatch/:user', async (request, response, next) => {
 
 
 app.post('/events', (request, response, next) => {
-  console.log(request.body);
   let { userId, groupId, event, flight, hotels } = request.body;
   if (!userId) {
     next('bad request');
@@ -272,7 +272,6 @@ app.post('/events', (request, response, next) => {
   })
   journey.save()
     .then(results => {
-      console.log(results);
       response.send(results);
     })
     .catch(e => {

@@ -151,7 +151,11 @@ let {eventType, depLocation, arrLocation, fromDate, toDate } = request.query;
       bookingUrl: topFlightArray[0].handoffUrl,
       departureTime: flightObj.departureTime,
       arrivalTime: flightObj.arrivalTime,
-      stopOverCount: flightObj.stopoversCount
+      stopOverCount: flightObj.stopoversCount,
+      depAirport: flightObj.departureAirportCode,
+      arrAirport: flightObj.arrivalAirportCode,
+      depLocation: depLocation.charAt(0).toUpperCase() + depLocation.slice(1),
+      arrLocation: arrLocation.charAt(0).toUpperCase() + arrLocation.slice(1)
     }
     
     //Sending to the client
@@ -164,7 +168,7 @@ let {eventType, depLocation, arrLocation, fromDate, toDate } = request.query;
 
 app.get('/events', async (request, response, next) => {
   let {eventType, depLocation, arrLocation, fromDate, toDate } = request.query;
-
+console.log(request.query)
   try {
     // Finding the city id of the arrLocation
     let config = {
@@ -231,6 +235,20 @@ app.get('/userEvents/:user', async (request, response, next) => {
   try {
     let groupEvents = await Event.find({  userId: id });
     response.send(groupEvents);
+  }
+  catch (e) {
+    next(e);
+  }
+
+})
+
+app.get('/groupMatch/:user', async (request, response, next) => {
+  let id = request.params.user;
+  try {
+    let userEvents = await Event.find({  userId: id });
+    let groups = userEvents.map(e => e.groupId);
+    let set = [...new Set(groups)];
+    response.send(set);
   }
   catch (e) {
     next(e);

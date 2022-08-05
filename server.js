@@ -37,6 +37,7 @@ class Events {
 function verifyUser(request, response, next) {
   try {
     const token = request.headers.authorization.split(' ')[1];
+    console.log(token);
     jwt.verify(token, getKey, {}, function(err, user) {
       request.user = user;
       next();
@@ -57,12 +58,13 @@ function getKey(header, callback) {
   });
 }
 
-app.use(verifyUser);
+//app.use(verifyUser);
 app.use((request, response, next) => {
   console.log(request.user);
+  //response.send(request.user)
   console.log('Almost made it');
   next();
-});
+})
 
 
 
@@ -185,7 +187,7 @@ app.get('/events', async (request, response, next) => {
 
     //Parsing response data
     let responseTrimmed = res2.data.results.slice(0,5);
-
+    console.log(responseTrimmed, 'line 190');
     //Saving each event as an event object
     let eventData = responseTrimmed.map(event => new Events(event));
 

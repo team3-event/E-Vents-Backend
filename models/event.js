@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const {Schema, model} = mongoose;
 
 const eventSchema = new Schema({
-  userId: Number,
+  userId: String,
   groupId: Number,
   event: {},
   flight: {},
